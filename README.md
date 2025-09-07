@@ -33,10 +33,10 @@ uv sync
 
 ```bash
 # Start the PostgreSQL container
-docker-compose up -d
+docker compose up -d
 
 # Check if the database is ready
-docker-compose ps
+docker compose ps
 ```
 
 ### 3. Run the Application
@@ -80,7 +80,7 @@ This endpoint currently returns the first 3 users. You can modify the query in `
 
 ## Database Setup
 
-The database is automatically set up when you run `docker-compose up -d`. The `init.sql` file creates the users table and inserts sample data.
+The database is automatically set up when you run `docker compose up -d`. The `init.sql` file creates the users table and inserts sample data.
 
 ### Manual Database Setup (if needed)
 
@@ -180,17 +180,17 @@ uv add --dev package-name
 
 1. Make sure PostgreSQL is running:
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
 
 2. Check database logs:
    ```bash
-   docker-compose logs postgres
+   docker compose logs postgres
    ```
 
 3. Restart the database:
    ```bash
-   docker-compose restart postgres
+   docker compose restart postgres
    ```
 
 ### Port Already in Use
