@@ -173,3 +173,7 @@ cython_debug/
 # OS
 .DS_Store
 Thumbs.db 
+
+# ignore Node.js files:
+node_modules/
+npm-debug.log

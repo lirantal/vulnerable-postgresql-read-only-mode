@@ -1,35 +1,28 @@
-# Hello World PostgreSQL API
+# PostgreSQL API Examples
 
-A simple FastAPI application with PostgreSQL using asyncpg for database connections.
+This repository contains examples of connecting to PostgreSQL from both Python (FastAPI) and JavaScript (Express) applications.
 
 ## Features
 
-- FastAPI web framework
-- PostgreSQL database with asyncpg
-- Docker Compose setup for easy development
-- Two endpoints: `/users` and `/users-test`
-- Health check endpoint
-- Sample user data pre-loaded
+- **Python FastAPI application** (in `python/` directory)
+  - FastAPI web framework with asyncpg
+  - Runs on port 8000
+- **JavaScript Express application** (in `javascript/` directory)  
+  - Express web framework with pg package
+  - Runs on port 3000
+- **Shared PostgreSQL database** via Docker Compose
+- Sample endpoints: `/users`, `/users-test`, `/health`
+- Pre-loaded sample user data
 
 ## Prerequisites
 
-- Python 3.8+
+- **For Python**: Python 3.8+, uv package manager
+- **For JavaScript**: Node.js 16+, npm
 - Docker and Docker Compose
-- uv (Python package manager)
 
 ## Quick Start
 
-### 1. Install Dependencies
-
-```bash
-# Install uv if you haven't already
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install project dependencies
-uv sync
-```
-
-### 2. Start PostgreSQL Database
+### 1. Start PostgreSQL Database (Required for both applications)
 
 ```bash
 # Start the PostgreSQL container
@@ -39,25 +32,64 @@ docker compose up -d
 docker compose ps
 ```
 
-### 3. Run the Application
+### 2A. Run Python Application
 
 ```bash
+# Navigate to Python directory
+cd python/
+
+# Install dependencies
+uv sync
+
 # Run the FastAPI application
 uv run python main.py
 ```
 
-The API will be available at `http://localhost:8000`
+The Python API will be available at `http://localhost:8000`
+
+### 2B. Run JavaScript Application  
+
+```bash
+# Navigate to JavaScript directory
+cd javascript/
+
+# Install dependencies
+npm install
+
+# Run the Express application
+npm start
+```
+
+The JavaScript API will be available at `http://localhost:3000`
+
+### 3. Test the Applications
 
 ## API Endpoints
 
-### Health Check
+Both applications expose the same endpoints on different ports:
+
+### Python FastAPI (port 8000)
 ```bash
+# Health Check
 curl http://localhost:8000/health
+
+# Get All Users
+curl http://localhost:8000/users
+
+# Test Endpoint
+curl http://localhost:8000/users-test
 ```
 
-### Get All Users
+### JavaScript Express (port 3000)  
 ```bash
-curl http://localhost:8000/users
+# Health Check
+curl http://localhost:3000/health
+
+# Get All Users  
+curl http://localhost:3000/users
+
+# Test Endpoint
+curl http://localhost:3000/users-test
 ```
 
 Expected response:
@@ -73,10 +105,14 @@ Expected response:
 
 ### Test Endpoint (Customizable)
 ```bash
+# Python
 curl http://localhost:8000/users-test
+
+# JavaScript  
+curl http://localhost:3000/users-test
 ```
 
-This endpoint currently returns the first 3 users. You can modify the query in `main.py` to test your own queries.
+Both endpoints currently return the first 3 users. You can modify the queries in the respective applications to test your own queries.
 
 ## Database Setup
 
@@ -139,16 +175,23 @@ SELECT COUNT(*) FROM users;
 
 ```
 .
-├── main.py              # FastAPI application
-├── pyproject.toml       # Project configuration (uv)
-├── docker-compose.yml   # PostgreSQL setup
-├── init.sql            # Database initialization
-└── README.md           # This file
+├── python/             # Python FastAPI application
+│   ├── main.py        # FastAPI application  
+│   ├── pyproject.toml # Project configuration (uv)
+│   └── README.md      # Python-specific documentation
+├── javascript/        # JavaScript Express application
+│   ├── index.js       # Express application
+│   ├── package.json   # npm configuration
+│   └── README.md      # JavaScript-specific documentation
+├── docker-compose.yml # PostgreSQL setup (shared)
+├── init.sql          # Database initialization (shared)
+└── README.md         # This file
 ```
 
-### Customizing the Test Endpoint
+### Customizing the Test Endpoints
 
-Edit the `/users-test` endpoint in `main.py` to test your own queries:
+#### Python (FastAPI)
+Edit the `/users-test` endpoint in `python/main.py`:
 
 ```python
 @app.get("/users-test", response_model=List[User])
@@ -164,14 +207,49 @@ async def get_users_test():
     return [User(**dict(row)) for row in result]
 ```
 
+#### JavaScript (Express)
+Edit the `/users-test` endpoint in `javascript/index.js`:
+
+```javascript
+app.get('/users-test', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    try {
+      // TODO: Replace this query with your own test query
+      const result = await client.query(
+        'SELECT id, name, email, created_at FROM users WHERE id <= 3 ORDER BY id'
+      );
+      res.json(result.rows);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Database query error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+```
+
 ### Adding New Dependencies
 
+#### Python
 ```bash
+cd python/
 # Add a new dependency
 uv add package-name
 
 # Add a development dependency
 uv add --dev package-name
+```
+
+#### JavaScript
+```bash
+cd javascript/
+# Add a new dependency
+npm install package-name
+
+# Add a development dependency  
+npm install --save-dev package-name
 ```
 
 ## Troubleshooting
@@ -202,26 +280,35 @@ ports:
   - "5433:5432"  # Change 5432 to 5433
 ```
 
-Then update the connection in `main.py`:
+Then update the connection in the respective applications:
 
+**Python** (`python/main.py`):
 ```python
 port=5433,  # Change from 5432 to 5433
 ```
 
+**JavaScript** (`javascript/index.js`):
+```javascript
+const pool = new Pool({
+  // ... other config
+  port: 5433,  // Change from 5432 to 5433
+});
+```
+
 ## API Documentation
 
-Once the application is running, you can access:
+### Python FastAPI
+Once the Python application is running, you can access:
 
 - Interactive API docs: http://localhost:8000/docs
 - Alternative API docs: http://localhost:8000/redoc 
 
+### JavaScript Express
+The JavaScript application provides JSON responses at:
+- http://localhost:3000/ (endpoints listed above)
 
-## Project Structure
+## Directory-Specific Information
 
-The project includes:
-- pyproject.toml - Project configuration using uv package manager
-- main.py - FastAPI application with the exact structure you requested
-- docker-compose.yml - PostgreSQL setup with Docker
-- init.sql - Database initialization script that creates the users table and inserts sample data
-- README.md - Comprehensive documentation with setup and usage instructions
-- .gitignore - Standard Python gitignore file
+For detailed setup and usage instructions for each application:
+- See `python/README.md` for Python/FastAPI specific information
+- See `javascript/README.md` for JavaScript/Express specific information
