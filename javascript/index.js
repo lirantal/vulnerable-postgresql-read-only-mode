@@ -50,25 +50,36 @@ app.get('/users-test', async (req, res) => {
         const client = await pool.connect();
 
         // ✅ Here's a safe query that works fine and that is what you innocently expect from users:
-        const sqlQueryFromUser = "SELECT id, name, email, created_at FROM users WHERE id > 5 ORDER BY id"
+        // const sqlQueryFromUser = "SELECT id, name, email, created_at FROM users WHERE id > 5 ORDER BY id"
 
         // ❌ this fails and indeed an error is thrown by PostgreSQL:
         // Database query error: error: cannot execute INSERT in a read-only transaction
-        //const sqlInsertNewUser = ";INSERT INTO users (name, email) VALUES ('Eve', 'eve@gibson.com')"
+        // const sqlQueryFromUser = ";INSERT INTO users (name, email) VALUES ('Eve', 'eve@gibson.com')"
 
         // ☠️ this works and bypasses the READ ONLY transaction, creating a new user
         // const sqlQueryFromUser = "COMMIT; INSERT INTO users (name, email) VALUES ('Eve', 'eve@gibson.com')"
 
         // ☠️ this works and creates a denial of service on the database causing every query to fail as
         // it is more than the threshold of query timeout
-        // const sqlQueryFromUser = "COMMIT; SET statement_timeout TO 1;"
+        const sqlQueryFromUser = "COMMIT; SET statement_timeout TO 1;"
 
         try {
             await client.query('BEGIN TRANSACTION READ ONLY');
             // Let's test transactions with a simple read-only query
+            // this is vulnerable:
             const result = await client.query(
                 sqlQueryFromUser
             );
+
+            // The following forces a prepared statement which is NOT vulnerable and
+            // provides a safe execution of the query, otherwise exception is thrown:
+            // Database query error: error: cannot insert multiple commands into a prepared statement
+            // const result = await client.query({
+            //     name: "sandboxed-statement",
+            //     text: sqlQueryFromUser,
+            //     values: [],
+            // });
+
             res.json(result.rows);
         } finally {
             client.release();
