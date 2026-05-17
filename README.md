@@ -312,3 +312,7 @@ The JavaScript application provides JSON responses at:
 For detailed setup and usage instructions for each application:
 - See `python/README.md` for Python/FastAPI specific information
 - See `javascript/README.md` for JavaScript/Express specific information
+
+## Contributing
+
+Please consult [CONTRIBUTING](./CONTRIBUTING.md) for guidelines on contributing to this project.
